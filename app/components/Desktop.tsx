@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import DCAApp from './DCAApp'
 import { motion, AnimatePresence } from 'framer-motion'
 import { soundManager } from '@/lib/sounds'
+import DCAStrategy from './DCAStrategy'
 
 interface Position {
   x: number
@@ -287,12 +287,12 @@ const Dock = ({
 export default function Desktop() {
   const [windows, setWindows] = useState<WindowState[]>([{
     id: 'dca',
-    title: 'DCA',
+    title: 'DCA AI Strategy',
     icon: '/dca-icon.png',
-    isOpen: false,
+    isOpen: true,
     isMinimized: false,
     zIndex: 0,
-    component: <DCAApp />
+    component: <DCAStrategy />
   }])
   const [topZIndex, setTopZIndex] = useState(1)
   const [windowHeight, setWindowHeight] = useState(0)

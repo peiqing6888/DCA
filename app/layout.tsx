@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DCA AI Strategy",
+  title: "pqDCA",
   description: "A Mac OS 8 style DCA AI Strategy application",
 };
 
