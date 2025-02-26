@@ -8,6 +8,11 @@ interface Position {
   y: number
 }
 
+interface Size {
+  width: number
+  height: number
+}
+
 interface DesktopIconProps {
   name: string
   icon: string
@@ -32,12 +37,29 @@ interface WindowProps {
   onClose: () => void
   children: React.ReactNode
   initialPosition?: Position
+  initialSize?: Size
 }
 
-const Window = ({ title, isOpen, onClose, children, initialPosition = { x: 50, y: 50 } }: WindowProps) => {
+const Window = ({ 
+  title, 
+  isOpen, 
+  onClose, 
+  children, 
+  initialPosition = { x: 50, y: 50 },
+  initialSize = { width: 320, height: 240 }
+}: WindowProps) => {
   const [position, setPosition] = useState<Position>(initialPosition)
+  const [size, setSize] = useState<Size>(initialSize)
   const [isDragging, setIsDragging] = useState(false)
+  const [isResizing, setIsResizing] = useState(false)
   const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 })
+  const [isMaximized, setIsMaximized] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false)
+  const [preMaximizeState, setPreMaximizeState] = useState<{
+    position: Position,
+    size: Size
+  } | null>(null)
+  
   const windowRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -47,14 +69,21 @@ const Window = ({ title, isOpen, onClose, children, initialPosition = { x: 50, y
           x: e.clientX - dragOffset.x,
           y: e.clientY - dragOffset.y
         })
+      } else if (isResizing) {
+        if (!windowRef.current) return
+        const rect = windowRef.current.getBoundingClientRect()
+        const newWidth = Math.max(320, e.clientX - rect.left)
+        const newHeight = Math.max(240, e.clientY - rect.top)
+        setSize({ width: newWidth, height: newHeight })
       }
     }
 
     const handleMouseUp = () => {
       setIsDragging(false)
+      setIsResizing(false)
     }
 
-    if (isDragging) {
+    if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
     }
@@ -63,10 +92,10 @@ const Window = ({ title, isOpen, onClose, children, initialPosition = { x: 50, y
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isDragging, dragOffset])
+  }, [isDragging, isResizing, dragOffset])
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (windowRef.current) {
+    if (windowRef.current && !isMaximized) {
       const rect = windowRef.current.getBoundingClientRect()
       setDragOffset({
         x: e.clientX - rect.left,
@@ -76,7 +105,37 @@ const Window = ({ title, isOpen, onClose, children, initialPosition = { x: 50, y
     }
   }
 
-  if (!isOpen) return null
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!isMaximized) {
+      setIsResizing(true)
+    }
+  }
+
+  const handleMaximize = () => {
+    if (isMaximized) {
+      if (preMaximizeState) {
+        setPosition(preMaximizeState.position)
+        setSize(preMaximizeState.size)
+      }
+    } else {
+      setPreMaximizeState({ position, size })
+      setPosition({ x: 0, y: 25 }) // Account for menu bar
+      setSize({ 
+        width: window.innerWidth, 
+        height: window.innerHeight - 25 // Account for menu bar
+      })
+    }
+    setIsMaximized(!isMaximized)
+  }
+
+  const handleMinimize = () => {
+    setIsMinimized(true)
+    // In a real implementation, we would animate the window to the dock
+    // For now, we'll just hide it and show it again when clicking the icon
+  }
+
+  if (!isOpen || isMinimized) return null
 
   return (
     <div 
@@ -84,14 +143,18 @@ const Window = ({ title, isOpen, onClose, children, initialPosition = { x: 50, y
       style={{
         left: position.x,
         top: position.y,
+        width: size.width,
+        height: size.height,
       }}
       className={`fixed bg-[#D8D8D8] border-[2px] border-black rounded shadow-xl
-                min-w-[320px] min-h-[240px] select-none
-                ${isDragging ? 'cursor-grabbing' : ''}`}
+                select-none overflow-hidden
+                ${isDragging ? 'cursor-grabbing' : ''}
+                ${isMaximized ? 'transition-all duration-200' : ''}`}
     >
       {/* Window Header */}
       <div 
         onMouseDown={handleMouseDown}
+        onDoubleClick={handleMaximize}
         className={`bg-gradient-to-r from-[#666666] to-[#999999] px-2 py-1 
                    flex items-center justify-between border-b border-black
                    cursor-grab active:cursor-grabbing`}
@@ -101,30 +164,41 @@ const Window = ({ title, isOpen, onClose, children, initialPosition = { x: 50, y
             onClick={onClose}
             className="w-3 h-3 bg-[#FC5753] rounded-full hover:opacity-80 border border-[#DF4744]"
           />
-          <button className="w-3 h-3 bg-[#FDBC40] rounded-full hover:opacity-80 border border-[#DE9F34]" />
-          <button className="w-3 h-3 bg-[#33C748] rounded-full hover:opacity-80 border border-[#27AA35]" />
+          <button 
+            onClick={handleMinimize}
+            className="w-3 h-3 bg-[#FDBC40] rounded-full hover:opacity-80 border border-[#DE9F34]"
+          />
+          <button 
+            onClick={handleMaximize}
+            className="w-3 h-3 bg-[#33C748] rounded-full hover:opacity-80 border border-[#27AA35]"
+          />
         </div>
         <span className="text-sm font-bold text-white drop-shadow select-none">{title}</span>
         <div className="w-12" /> {/* Spacer */}
       </div>
 
       {/* Window Content */}
-      <div className="p-4 bg-[#ECECEC]">
+      <div className="p-4 bg-[#ECECEC] h-[calc(100%-28px)] overflow-auto">
         {children}
       </div>
 
       {/* Window Resize Handle */}
-      <div className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize">
-        <svg
-          viewBox="0 0 16 16"
-          className="w-full h-full text-gray-400"
+      {!isMaximized && (
+        <div 
+          onMouseDown={handleResizeMouseDown}
+          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
         >
-          <path
-            fill="currentColor"
-            d="M11 11v4h4v-4h-4zm1 1h2v2h-2v-2z"
-          />
-        </svg>
-      </div>
+          <svg
+            viewBox="0 0 16 16"
+            className="w-full h-full text-gray-400"
+          >
+            <path
+              fill="currentColor"
+              d="M11 11v4h4v-4h-4zm1 1h2v2h-2v-2z"
+            />
+          </svg>
+        </div>
+      )}
     </div>
   )
 }
@@ -170,6 +244,7 @@ export default function Desktop() {
         isOpen={openWindows.dca}
         onClose={() => toggleWindow('dca')}
         initialPosition={{ x: 100, y: 100 }}
+        initialSize={{ width: 320, height: 240 }}
       >
         <DCAApp />
       </Window>
