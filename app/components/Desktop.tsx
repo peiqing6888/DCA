@@ -287,7 +287,7 @@ const Dock = ({
 export default function Desktop() {
   const [windows, setWindows] = useState<WindowState[]>([{
     id: 'dca',
-    title: 'DCA AI Strategy',
+    title: 'DCA',
     icon: '/dca-icon.png',
     isOpen: false,
     isMinimized: false,
@@ -397,7 +397,7 @@ export default function Desktop() {
                 onClick={() => handleMenuClick(key)}
               >
                 {key === 'apple' ? (
-                  <img src="/apple-logo.svg" alt="Apple" className="h-3 w-3 inline" />
+                  <img src="/apple.png" alt="Apple" className="h-3 w-3 inline" />
                 ) : (
                   key.charAt(0).toUpperCase() + key.slice(1)
                 )}
