@@ -457,8 +457,8 @@ export default function Desktop() {
           onClose={() => toggleWindow(window.id)}
           onMinimize={() => minimizeWindow(window.id)}
           onFocus={() => bringToFront(window.id)}
-          initialPosition={{ x: 100, y: 100 }}
-          initialSize={{ width: 320, height: 240 }}
+          initialPosition={{ x: 100, y: 50 }}
+          initialSize={{ width: 480, height: 640 }}
           dockPosition={window.isMinimized ? { 
             x: window.zIndex * 60, 
             y: windowHeight - 60
