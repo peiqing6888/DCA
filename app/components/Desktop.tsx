@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import DCAApp from './DCAApp'
 import { motion, AnimatePresence } from 'framer-motion'
+import { soundManager } from '@/lib/sounds'
 
 interface Position {
   x: number
@@ -132,7 +133,18 @@ const Window = ({
     }
   }
 
+  const handleClose = () => {
+    soundManager.play('close')
+    onClose()
+  }
+
+  const handleMinimize = () => {
+    soundManager.play('minimize')
+    onMinimize()
+  }
+
   const handleMaximize = () => {
+    soundManager.play(isMaximized ? 'restore' : 'maximize')
     if (isMaximized) {
       if (preMaximizeState) {
         setPosition(preMaximizeState.position)
@@ -140,17 +152,13 @@ const Window = ({
       }
     } else {
       setPreMaximizeState({ position, size })
-      setPosition({ x: 0, y: 25 }) // Account for menu bar
+      setPosition({ x: 0, y: 25 })
       setSize({ 
         width: window.innerWidth, 
-        height: window.innerHeight - 25 // Account for menu bar
+        height: window.innerHeight - 25
       })
     }
     setIsMaximized(!isMaximized)
-  }
-
-  const handleMinimize = () => {
-    onMinimize()
   }
 
   if (!isOpen) return null
@@ -165,7 +173,8 @@ const Window = ({
           opacity: 0
         } : {
           scale: 0.95,
-          opacity: 0
+          opacity: 0,
+          y: -20
         }}
         animate={{
           left: isMinimized ? (dockPosition?.x || 0) : position.x,
@@ -173,11 +182,13 @@ const Window = ({
           width: isMinimized ? 48 : size.width,
           height: isMinimized ? 48 : size.height,
           scale: 1,
-          opacity: 1
+          opacity: isDragging ? 0.6 : 1,
+          y: 0
         }}
         exit={{
-          scale: 0.5,
-          opacity: 0
+          scale: 0.9,
+          opacity: 0,
+          y: 20
         }}
         transition={{
           type: "spring",
@@ -189,7 +200,7 @@ const Window = ({
         }}
         onMouseDown={onFocus}
         className={`fixed bg-[#D8D8D8] border-[2px] border-black rounded shadow-xl
-                  select-none overflow-hidden
+                  select-none overflow-hidden backdrop-blur-sm
                   ${isDragging ? 'cursor-grabbing' : ''}
                   ${isMaximized ? 'transition-all duration-200' : ''}`}
       >
@@ -203,7 +214,7 @@ const Window = ({
         >
           <div className="flex items-center gap-1">
             <button 
-              onClick={onClose}
+              onClick={handleClose}
               className="w-3 h-3 bg-[#FC5753] rounded-full hover:opacity-80 border border-[#DF4744]"
             />
             <button 
@@ -285,12 +296,21 @@ export default function Desktop() {
   }])
   const [topZIndex, setTopZIndex] = useState(1)
   const [windowHeight, setWindowHeight] = useState(0)
+  const [currentTime, setCurrentTime] = useState(new Date())
+  const [isMenuOpen, setIsMenuOpen] = useState<string | null>(null)
 
   useEffect(() => {
     setWindowHeight(window.innerHeight)
     const handleResize = () => setWindowHeight(window.innerHeight)
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
   }, [])
 
   const toggleWindow = (id: string) => {
@@ -332,30 +352,85 @@ export default function Desktop() {
   const minimizedWindows = windows.filter(w => w.isOpen && w.isMinimized)
   const visibleWindows = windows.filter(w => w.isOpen)
 
+  const handleMenuClick = (menu: string) => {
+    soundManager.play('click')
+    setIsMenuOpen(isMenuOpen === menu ? null : menu)
+  }
+
+  const menuItems = {
+    apple: [
+      { label: 'About This Computer', action: () => {} },
+      { label: 'Control Panels', action: () => {} },
+      { label: 'System Settings', action: () => {} },
+    ],
+    file: [
+      { label: 'New Window', action: () => {} },
+      { label: 'Close Window', action: () => {} },
+      { label: 'Save', action: () => {} },
+    ],
+    edit: [
+      { label: 'Cut', action: () => {} },
+      { label: 'Copy', action: () => {} },
+      { label: 'Paste', action: () => {} },
+    ],
+    view: [
+      { label: 'Clean Up', action: () => {} },
+      { label: 'View Options...', action: () => {} },
+    ],
+    special: [
+      { label: 'Empty Trash...', action: () => {} },
+      { label: 'Eject Disk', action: () => {} },
+      { label: 'Sound Settings', action: () => soundManager.toggle() },
+    ],
+  }
+
   return (
     <div className="min-h-screen bg-[url('/wallpaper.jpg')] bg-cover bg-center p-4">
       {/* Menu Bar */}
       <div className="fixed top-0 left-0 right-0 h-5 bg-gradient-to-b from-[#FFFFFF] to-[#D8D8D8] border-b border-black/20 flex items-center px-2 z-50">
         <div className="flex items-center gap-4">
-          <div className="relative group">
-            <img src="/apple-logo.svg" alt="Apple" className="h-3 w-3" />
-            <div className="hidden group-hover:block absolute top-full left-0 mt-1
-                          bg-[#D8D8D8] border border-black rounded shadow-lg
-                          min-w-[200px] py-1">
-              <div className="px-4 py-1 hover:bg-black/10 cursor-default">About This Computer</div>
-              <div className="h-px bg-black/20 my-1" />
-              <div className="px-4 py-1 hover:bg-black/10 cursor-default">Control Panels</div>
-              <div className="px-4 py-1 hover:bg-black/10 cursor-default">System Settings</div>
+          {Object.entries(menuItems).map(([key, items]) => (
+            <div key={key} className="relative">
+              <span 
+                className={`text-xs font-bold cursor-default px-2 py-0.5 rounded
+                          ${isMenuOpen === key ? 'bg-black text-white' : 'hover:bg-black/10'}`}
+                onClick={() => handleMenuClick(key)}
+              >
+                {key === 'apple' ? (
+                  <img src="/apple-logo.svg" alt="Apple" className="h-3 w-3 inline" />
+                ) : (
+                  key.charAt(0).toUpperCase() + key.slice(1)
+                )}
+              </span>
+              {isMenuOpen === key && (
+                <div className="absolute top-full left-0 mt-1
+                              bg-[#D8D8D8] border border-black rounded shadow-lg
+                              min-w-[200px] py-1">
+                  {items.map((item, index) => (
+                    <>
+                      <div 
+                        key={item.label}
+                        className="px-4 py-1 hover:bg-black/10 cursor-default"
+                        onClick={() => {
+                          soundManager.play('click')
+                          item.action()
+                          setIsMenuOpen(null)
+                        }}
+                      >
+                        {item.label}
+                      </div>
+                      {index < items.length - 1 && (
+                        <div className="h-px bg-black/20 my-1" />
+                      )}
+                    </>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-          <span className="text-xs font-bold cursor-default">File</span>
-          <span className="text-xs font-bold cursor-default">Edit</span>
-          <span className="text-xs font-bold cursor-default">View</span>
-          <span className="text-xs font-bold cursor-default">Special</span>
-          <span className="text-xs font-bold cursor-default">Help</span>
+          ))}
         </div>
         <div className="ml-auto flex items-center gap-4 text-xs">
-          <span>{new Date().toLocaleTimeString()}</span>
+          <span>{currentTime.toLocaleTimeString()}</span>
         </div>
       </div>
 
