@@ -477,7 +477,7 @@ export default function Desktop() {
 
       {/* Desktop Icons */}
       <div className="grid grid-cols-6 gap-4 mt-6">
-        {windows.map(window => (
+        {windows.filter(window => window.id !== 'about').map(window => (
           <DesktopIcon 
             key={window.id}
             name={window.title}
