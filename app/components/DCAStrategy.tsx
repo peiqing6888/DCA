@@ -152,18 +152,29 @@ export default function DCAStrategy() {
         <div className="space-y-4">
           <div className="space-y-2">
             <label className="block text-sm font-bold mac-text">Asset</label>
-            <select
-              value={selectedAsset}
-              onChange={(e) => setSelectedAsset(e.target.value)}
-              className="w-full px-3 py-2 bg-white border-2 border-black rounded"
-              disabled={loading}
-            >
-              {assets.map((asset) => (
-                <option key={asset.symbol} value={asset.symbol}>
-                  {asset.name} ({asset.symbol}) - ${asset.current_price.toFixed(2)}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={selectedAsset}
+                onChange={(e) => {
+                  setSelectedAsset(e.target.value);
+                  setChartError(null);
+                }}
+                className="w-full px-3 py-2 bg-white border-2 border-black rounded cursor-pointer appearance-none"
+                disabled={loading}
+              >
+                <option value="">Select an asset</option>
+                {assets.map((asset) => (
+                  <option key={asset.symbol} value={asset.symbol}>
+                    {asset.symbol} - ${asset.current_price.toFixed(2)}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
             {selectedAsset && assets.length > 0 && (
               <div className="text-sm">
                 <span className={cn(
