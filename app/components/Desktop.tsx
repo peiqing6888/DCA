@@ -298,6 +298,7 @@ export default function Desktop() {
   const [windowHeight, setWindowHeight] = useState(0)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [isMenuOpen, setIsMenuOpen] = useState<string | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setWindowHeight(window.innerHeight)
@@ -312,6 +313,22 @@ export default function Desktop() {
     }, 1000)
     return () => clearInterval(timer)
   }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(null)
+      }
+    }
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isMenuOpen])
 
   const toggleWindow = (id: string) => {
     setWindows(prev => prev.map(window => {
@@ -387,12 +404,15 @@ export default function Desktop() {
   return (
     <div className="min-h-screen bg-[url('/wallpaper.jpg')] bg-cover bg-center p-4">
       {/* Menu Bar */}
-      <div className="fixed top-0 left-0 right-0 h-5 bg-gradient-to-b from-[#FFFFFF] to-[#D8D8D8] border-b border-black/20 flex items-center px-2 z-50">
+      <div 
+        ref={menuRef}
+        className="fixed top-0 left-0 right-0 h-5 bg-gradient-to-b from-[#FFFFFF] to-[#D8D8D8] border-b border-black/20 flex items-center px-2 z-50"
+      >
         <div className="flex items-center gap-4">
           {Object.entries(menuItems).map(([key, items]) => (
             <div key={key} className="relative">
               <span 
-                className={`text-xs font-bold cursor-default px-2 py-0.5 rounded
+                className={`text-xs font-bold cursor-default px-2 py-0.5 rounded select-none
                           ${isMenuOpen === key ? 'bg-black text-white' : 'hover:bg-black/10'}`}
                 onClick={() => handleMenuClick(key)}
               >
@@ -403,14 +423,17 @@ export default function Desktop() {
                 )}
               </span>
               {isMenuOpen === key && (
-                <div className="absolute top-full left-0 mt-1
-                              bg-[#D8D8D8] border border-black rounded shadow-lg
-                              min-w-[200px] py-1">
+                <div 
+                  className="absolute top-full left-0 mt-1
+                            bg-[#D8D8D8] border-2 border-black rounded shadow-lg
+                            min-w-[200px] py-1 animate-in fade-in slide-in-from-top-2
+                            backdrop-blur-sm bg-opacity-95"
+                >
                   {items.map((item, index) => (
-                    <>
+                    <div key={item.label}>
                       <div 
-                        key={item.label}
-                        className="px-4 py-1 hover:bg-black/10 cursor-default"
+                        className="px-4 py-1.5 hover:bg-black hover:text-white cursor-default
+                                 transition-colors duration-100 select-none"
                         onClick={() => {
                           soundManager.play('click')
                           item.action()
@@ -420,9 +443,9 @@ export default function Desktop() {
                         {item.label}
                       </div>
                       {index < items.length - 1 && (
-                        <div className="h-px bg-black/20 my-1" />
+                        <div className="h-px bg-black/20 mx-2" />
                       )}
-                    </>
+                    </div>
                   ))}
                 </div>
               )}
@@ -430,7 +453,7 @@ export default function Desktop() {
           ))}
         </div>
         <div className="ml-auto flex items-center gap-4 text-xs">
-          <span>{currentTime.toLocaleTimeString()}</span>
+          <span className="select-none">{currentTime.toLocaleTimeString()}</span>
         </div>
       </div>
 
