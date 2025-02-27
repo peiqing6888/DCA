@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DCA AI Strategy Application
+
+A Mac OS 8 style Dollar-Cost Averaging (DCA) strategy application built with Next.js and FastAPI.
+
+![DCA AI Strategy App Screenshot]
+
+## Features
+
+- 🖥️ Mac OS 8 style user interface
+  - Window management (drag, resize, minimize, maximize)
+  - Classic menu bar with dropdown menus
+  - System sounds and animations
+  - Pixel-perfect recreation of classic UI elements
+- 📈 DCA Strategy Analysis
+  - Real-time asset price tracking
+  - Technical indicators (SMA50, SMA200)
+  - AI-enhanced investment recommendations
+  - Strategy history tracking
+- 🎨 Modern Development Stack
+  - Next.js 14 with App Router
+  - FastAPI backend with real-time data
+  - Tailwind CSS for styling
+  - Framer Motion for animations
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ and npm/bun
+- Python 3.11+
+- pip
+
+### Frontend Setup
 
 ```bash
+# Install dependencies
+npm install
+# or
+bun install
+
+# Start the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 # or
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Backend Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Create and activate virtual environment
+cd api
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Install dependencies
+pip install -r requirements.txt
 
-## Learn More
+# Start the FastAPI server
+uvicorn main:app --reload
+```
 
-To learn more about Next.js, take a look at the following resources:
+Visit [http://localhost:3000](http://localhost:3000) to see the application.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+.
+├── app/                    # Next.js frontend
+│   ├── components/        # React components
+│   ├── lib/              # Utilities and API clients
+│   └── ...
+├── api/                   # FastAPI backend
+│   ├── main.py           # API endpoints
+│   └── requirements.txt   # Python dependencies
+└── public/               # Static assets
+```
 
-## Deploy on Vercel
+## Development
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Frontend runs on port 3000
+- Backend API runs on port 8000
+- Hot reloading enabled for both frontend and backend
+- Tailwind CSS for styling with Mac OS 8 theme
+- Sound effects for interactions
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+MIT License - See LICENSE file for details
+
+## Acknowledgments
+
+- Inspired by Mac OS 8's iconic design
+- Built with modern web technologies
+- Uses Yahoo Finance API for real-time data
