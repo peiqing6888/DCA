@@ -288,7 +288,7 @@ const Dock = ({
 export default function Desktop() {
   const [windows, setWindows] = useState<WindowState[]>([{
     id: 'dca',
-    title: 'DCA AI Strategy',
+    title: 'DCA',
     icon: '/dca-icon.png',
     isOpen: true,
     isMinimized: false,
