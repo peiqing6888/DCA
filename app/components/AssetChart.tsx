@@ -31,8 +31,15 @@ export default function AssetChart({ symbol, timeRange, onError }: AssetChartPro
 
   useEffect(() => {
     const fetchChartData = async () => {
+      if (!symbol) {
+        setData([]);
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
+        onError('');
         const response = await fetch(`http://localhost:8000/assets/${symbol}/chart?range=${timeRange}`);
         if (!response.ok) {
           throw new Error('Failed to fetch chart data');
@@ -50,12 +57,32 @@ export default function AssetChart({ symbol, timeRange, onError }: AssetChartPro
     fetchChartData();
   }, [symbol, timeRange, onError]);
 
+  if (!symbol) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center text-gray-500">
+          Please select an asset to view chart
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="mb-2">Loading chart...</div>
           <div className="w-8 h-8 border-4 border-t-[#666666] border-r-[#666666] border-b-[#666666] border-l-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center text-gray-500">
+          No data available for this time range
         </div>
       </div>
     );

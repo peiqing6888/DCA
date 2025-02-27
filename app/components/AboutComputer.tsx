@@ -7,7 +7,7 @@ export default function AboutComputer() {
         <div className="relative w-16 h-16">
           <Image
             src="/about-computer.png"
-            alt="ryOS Logo"
+            alt="about this computer"
             width={64}
             height={64}
             className="pixelated"

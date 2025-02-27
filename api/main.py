@@ -1,11 +1,13 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 from datetime import datetime, timedelta
 import yfinance as yf
 import pandas as pd
 import numpy as np
+import time
+from functools import lru_cache
 
 app = FastAPI(title="DCA AI Strategy API")
 
@@ -17,6 +19,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 缓存设置
+CACHE_DURATION = 300  # 5分钟缓存
+last_request_time: Dict[str, float] = {}
+MIN_REQUEST_INTERVAL = 2.0  # 每个symbol最少2秒间隔
+
+def rate_limit(symbol: str):
+    """实现简单的请求限流"""
+    current_time = time.time()
+    if symbol in last_request_time:
+        time_since_last_request = current_time - last_request_time[symbol]
+        if time_since_last_request < MIN_REQUEST_INTERVAL:
+            time.sleep(MIN_REQUEST_INTERVAL - time_since_last_request)
+    last_request_time[symbol] = current_time
+
+@lru_cache(maxsize=100)
+def get_cached_ticker_info(symbol: str) -> dict:
+    """获取并缓存股票信息"""
+    rate_limit(symbol)
+    ticker = yf.Ticker(symbol)
+    return {
+        "info": ticker.info,
+        "history": ticker.history(period="2d").to_dict('records'),
+        "timestamp": time.time()
+    }
 
 class Asset(BaseModel):
     symbol: str
@@ -91,15 +118,20 @@ async def get_assets():
     
     for symbol in assets:
         try:
-            ticker = yf.Ticker(symbol)
-            info = ticker.info
-            hist = ticker.history(period="2d")
+            cached_data = get_cached_ticker_info(symbol)
+            
+            if time.time() - cached_data["timestamp"] > CACHE_DURATION:
+                get_cached_ticker_info.cache_clear()
+                cached_data = get_cached_ticker_info(symbol)
+            
+            info = cached_data["info"]
+            hist = cached_data["history"]
             
             if len(hist) >= 2:
-                current_price = hist['Close'].iloc[-1]
-                prev_price = hist['Close'].iloc[-2]
+                current_price = hist[-1]['Close']
+                prev_price = hist[-2]['Close']
                 change_24h = ((current_price - prev_price) / prev_price) * 100
-                volume_24h = hist['Volume'].iloc[-1]
+                volume_24h = hist[-1]['Volume']
                 
                 result.append(Asset(
                     symbol=symbol,
@@ -118,6 +150,9 @@ async def get_assets():
 async def get_chart_data(symbol: str, range: str = "1M"):
     """获取资产的图表数据"""
     try:
+        if not symbol:
+            raise HTTPException(status_code=400, detail="Symbol is required")
+            
         # 根据时间范围获取数据
         periods = {
             "1D": "1d",
@@ -128,6 +163,7 @@ async def get_chart_data(symbol: str, range: str = "1M"):
         }
         period = periods.get(range, "1mo")
         
+        rate_limit(symbol)
         ticker = yf.Ticker(symbol)
         hist = ticker.history(period=period)
         
