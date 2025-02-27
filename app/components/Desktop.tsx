@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { soundManager } from '@/lib/sounds'
 import DCAStrategy from './DCAStrategy'
+import AboutComputer from './AboutComputer'
 
 interface Position {
   x: number
@@ -293,6 +294,14 @@ export default function Desktop() {
     isMinimized: false,
     zIndex: 0,
     component: <DCAStrategy />
+  }, {
+    id: 'about',
+    title: 'About This Computer',
+    icon: '/ryos-logo.png',
+    isOpen: false,
+    isMinimized: false,
+    zIndex: 0,
+    component: <AboutComputer />
   }])
   const [topZIndex, setTopZIndex] = useState(1)
   const [windowHeight, setWindowHeight] = useState(0)
@@ -376,7 +385,16 @@ export default function Desktop() {
 
   const menuItems = {
     apple: [
-      { label: 'About This Computer', action: () => {} },
+      { 
+        label: 'About This Computer', 
+        action: () => {
+          const aboutWindow = windows.find(w => w.id === 'about')
+          if (aboutWindow && !aboutWindow.isOpen) {
+            toggleWindow('about')
+          }
+          bringToFront('about')
+        }
+      },
       { label: 'Control Panels', action: () => {} },
       { label: 'System Settings', action: () => {} },
     ],
@@ -480,8 +498,11 @@ export default function Desktop() {
           onClose={() => toggleWindow(window.id)}
           onMinimize={() => minimizeWindow(window.id)}
           onFocus={() => bringToFront(window.id)}
-          initialPosition={{ x: 100, y: 50 }}
-          initialSize={{ width: 480, height: 640 }}
+          initialPosition={{ x: window.id === 'about' ? 200 : 100, y: window.id === 'about' ? 100 : 50 }}
+          initialSize={{ 
+            width: window.id === 'about' ? 400 : 480, 
+            height: window.id === 'about' ? 200 : 640 
+          }}
           dockPosition={window.isMinimized ? { 
             x: window.zIndex * 60, 
             y: windowHeight - 60
