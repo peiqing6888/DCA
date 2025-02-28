@@ -25,6 +25,13 @@ export interface DCARecommendation {
   market_conditions: string[];
 }
 
+export interface TokenPrice {
+  price: number;
+  timestamp: number;
+  symbol: string;
+  confidence: number;
+}
+
 const API_BASE_URL = 'http://localhost:8000';
 
 export async function getAssets(): Promise<Asset[]> {
@@ -57,4 +64,14 @@ export async function analyzeDCAStrategy(strategy: DCAStrategy): Promise<DCAReco
     ...data,
     next_dca_date: new Date(data.next_dca_date),
   };
+}
+
+export async function getTokenPrice(tokenId: string): Promise<TokenPrice> {
+  const response = await fetch(`${API_BASE_URL}/token/price/${tokenId}`);
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch token price');
+  }
+
+  return await response.json();
 } 
