@@ -7,9 +7,8 @@ import { cn } from '@/lib/utils';
 import AdvancedChart from './AdvancedChart';
 
 type Frequency = 'daily' | 'weekly' | 'monthly';
-type TimeRange = '1D' | '1W' | '1M' | '3M' | '1Y';
 
-// 市场情绪类型
+// Market sentiment type
 type MarketSentiment = 'Bullish' | 'Bearish' | 'Neutral';
 
 interface Strategy {
@@ -41,7 +40,7 @@ interface PerformanceMetric {
   roi: number;
 }
 
-// AI 信心度指示器组件
+// AI Confidence Indicator component
 const ConfidenceIndicator = ({ value }: { value: number }) => (
   <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mac-border">
     <div 
@@ -51,7 +50,7 @@ const ConfidenceIndicator = ({ value }: { value: number }) => (
   </div>
 );
 
-// 复古风格的仪表盘组件
+// Retro-style Dashboard component
 const RetroGauge = ({ sentiment }: { sentiment: MarketSentiment }) => {
   const getColor = () => {
     switch (sentiment) {
@@ -69,7 +68,7 @@ const RetroGauge = ({ sentiment }: { sentiment: MarketSentiment }) => {
   );
 };
 
-// 通知组件
+// Notification component
 const NotificationBadge = ({ notifications }: { notifications: Notification[] }) => (
   <div className="mac-window p-2 max-h-40 overflow-auto">
     {notifications.map(notification => (
@@ -90,7 +89,7 @@ const NotificationBadge = ({ notifications }: { notifications: Notification[] })
   </div>
 );
 
-// 性能指标组件
+// Performance Metrics component
 const PerformanceMetrics = ({ metrics }: { metrics: PerformanceMetric[] }) => (
   <div className="space-y-2">
     <div className="grid grid-cols-3 gap-2">
@@ -125,7 +124,7 @@ export default function DCAStrategy() {
   const [showAdvancedChart, setShowAdvancedChart] = useState(false);
   const [savedStrategies, setSavedStrategies] = useState<SavedStrategy[]>([]);
   
-  // 新增：AI 分析状态
+  // Add: AI Analysis state
   const [aiAnalysis, setAiAnalysis] = useState({
     marketSentiment: 'Neutral' as MarketSentiment,
     confidence: 0.5,
@@ -133,7 +132,7 @@ export default function DCAStrategy() {
     predictions: [] as string[],
   });
 
-  // 新增状态
+  // Add: Additional states
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetric[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -177,14 +176,14 @@ export default function DCAStrategy() {
     fetchSavedStrategies();
   }, []);
 
-  // 模拟 AI 分析更新
+  // Simulate AI analysis update
   useEffect(() => {
     if (!selectedAsset || !aiEnhanced) return;
 
     const updateAiAnalysis = () => {
       const sentiments: MarketSentiment[] = ['Bullish', 'Bearish', 'Neutral'];
       const randomSentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
-      const randomConfidence = 0.5 + (Math.random() * 0.5); // 0.5 到 1.0 之间
+      const randomConfidence = 0.5 + (Math.random() * 0.5); // Between 0.5 and 1.0
 
       setAiAnalysis(prev => ({
         ...prev,
@@ -192,24 +191,24 @@ export default function DCAStrategy() {
         confidence: randomConfidence,
         lastUpdate: new Date(),
         predictions: [
-          '预计短期内市场波动加剧',
-          '建议在价格回调时分批买入',
-          '关注宏观经济指标变化',
+          'Market volatility expected to increase in short term',
+          'Recommend buying in batches during price corrections',
+          'Monitor macroeconomic indicator changes',
         ],
       }));
 
-      // 播放复古电脑提示音
+      // Play retro computer notification sound
       soundManager.play('notification');
     };
 
-    // 每30秒更新一次分析
+    // Update analysis every 30 seconds
     const timer = setInterval(updateAiAnalysis, 30000);
-    updateAiAnalysis(); // 初始更新
+    updateAiAnalysis(); // Initial update
 
     return () => clearInterval(timer);
   }, [selectedAsset, aiEnhanced]);
 
-  // 模拟生成性能指标
+  // Simulate generating performance metrics
   useEffect(() => {
     if (!selectedAsset) return;
 
@@ -237,7 +236,7 @@ export default function DCAStrategy() {
     generateMetrics();
   }, [selectedAsset, amount]);
 
-  // 模拟生成智能通知
+  // Simulate generating intelligent notifications
   useEffect(() => {
     if (!selectedAsset || !aiEnhanced) return;
 
@@ -246,25 +245,25 @@ export default function DCAStrategy() {
         {
           type: 'success',
           messages: [
-            '最佳买入时机：当前价格低于30日均线',
-            'AI预测：市场即将触底反弹',
-            '建议：增加定投金额以把握机会'
+            'Best buying time: Current price below 30-day moving average',
+            'AI prediction: Market about to bottom out and rebound',
+            'Recommend: Increase regular investment amount to seize the opportunity'
           ]
         },
         {
           type: 'warning',
           messages: [
-            '注意：市场波动性增加',
-            '建议：考虑分散投资降低风险',
-            '提醒：下一次定投日期临近'
+            'Attention: Market volatility increasing',
+            'Recommend: Consider diversifying investments to reduce risk',
+            'Reminder: Next regular investment date approaching'
           ]
         },
         {
           type: 'info',
           messages: [
-            '市场分析：主要指标趋势向好',
-            '策略提示：保持当前定投计划',
-            'AI洞察：机构资金流入增加'
+            'Market analysis: Main indicators trend positive',
+            'Strategy reminder: Maintain current investment plan',
+            'AI insight: Institutional funds inflow increasing'
           ]
         }
       ];
@@ -284,7 +283,7 @@ export default function DCAStrategy() {
     };
 
     const timer = setInterval(generateNotification, 45000);
-    generateNotification(); // 初始通知
+    generateNotification(); // Initial notification
 
     return () => clearInterval(timer);
   }, [selectedAsset, aiEnhanced]);
@@ -307,7 +306,7 @@ export default function DCAStrategy() {
       setRecommendation(result);
       soundManager.play('open');
 
-      // 保存策略
+      // Save strategy
       try {
         const response = await fetch('http://localhost:8000/strategies', {
           method: 'POST',
@@ -400,7 +399,7 @@ export default function DCAStrategy() {
             )}
           </div>
 
-          {/* 价格图表按钮 */}
+          {/* Price chart button */}
           <div className="py-2">
             <button
               onClick={() => setShowAdvancedChart(true)}
@@ -468,7 +467,7 @@ export default function DCAStrategy() {
         </div>
       </div>
 
-      {/* AI 分析仪表盘 */}
+      {/* AI Analysis Dashboard */}
       {aiEnhanced && (
         <div className="mac-window p-4 rounded">
           <div className="mb-4">
@@ -577,7 +576,7 @@ export default function DCAStrategy() {
         </div>
       )}
 
-      {/* 智能通知按钮 */}
+      {/* Intelligent Notification Button */}
       {aiEnhanced && notifications.length > 0 && (
         <div className="fixed bottom-4 right-4">
           <button
@@ -598,7 +597,7 @@ export default function DCAStrategy() {
         </div>
       )}
 
-      {/* 性能分析面板 */}
+      {/* Performance Analysis Panel */}
       {performanceMetrics.length > 0 && (
         <div className="mac-window p-4 rounded">
           <h2 className="text-lg font-bold mac-text mb-4">Strategy Performance</h2>

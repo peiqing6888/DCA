@@ -18,7 +18,7 @@ class SoundManager {
       click: new Audio('/sounds/click.mp3'),
     }
 
-    // 预加载所有音效
+    // Preload all sound effects
     Object.values(this.sounds).forEach(audio => {
       audio.load()
     })
@@ -37,7 +37,7 @@ class SoundManager {
     if (sound) {
       sound.currentTime = 0
       sound.play().catch(() => {
-        // 忽略自动播放策略导致的错误
+        // Ignore errors caused by autoplay policy
       })
     }
   }

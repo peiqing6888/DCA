@@ -9,7 +9,7 @@ export default function MenuBar() {
   const [isRainbow, setIsRainbow] = useState(false);
   const [clickCount, setClickCount] = useState(0);
 
-  // 更新时间
+  // Update time
   useEffect(() => {
     const timer = setInterval(() => {
       setTime(new Date());
@@ -21,7 +21,7 @@ export default function MenuBar() {
     setActiveItem(item);
     setClickCount(prev => prev + 1);
 
-    // 当点击次数达到特定值时触发彩虹效果
+    // Trigger rainbow effect when click count reaches target
     if (clickCount + 1 === 7) {
       setIsRainbow(true);
       setTimeout(() => setIsRainbow(false), 3000);
@@ -35,16 +35,16 @@ export default function MenuBar() {
     return () => clearTimeout(timer);
   };
 
-  // 处理 Apple Logo 点击
+  // Handle Apple Logo click
   const handleLogoClick = () => {
-    const audio = new Audio('/retro-click.mp3'); // 需要添加音效文件
-    audio.play().catch(() => {}); // 忽略可能的播放错误
+    const audio = new Audio('/retro-click.mp3'); // Need to add sound effect file
+    audio.play().catch(() => {}); // Ignore potential playback errors
   };
 
   return (
-    <div className={`bg-[#DDDDDD] border-b border-black flex items-center h-[24px] px-3 justify-between transition-all duration-500 ${isRainbow ? 'rainbow-bg' : ''}`}>
+    <div className={`bg-[#DDDDDD] border-b border-black flex items-center h-[33px] px-3 justify-between transition-all duration-500 ${isRainbow ? 'rainbow-bg' : ''}`}>
       <div className="flex items-center space-x-5">
-        {/* 苹果标志 */}
+        {/* Apple Logo */}
         <div 
           className="flex items-center justify-center w-7 h-7 -mt-1 cursor-pointer transform hover:scale-105 transition-transform"
           onClick={handleLogoClick}
@@ -52,7 +52,7 @@ export default function MenuBar() {
           <AppleLogo />
         </div>
         
-        {/* 菜单项 */}
+        {/* Menu Items */}
         <div className="flex space-x-5 text-sm">
           {['File', 'Edit', 'View', 'Special'].map((item) => (
             <span
@@ -68,7 +68,7 @@ export default function MenuBar() {
         </div>
       </div>
 
-      {/* 时间显示 */}
+      {/* Time Display */}
       <div className="text-sm font-chicago">
         {time.toLocaleTimeString('en-US', { 
           hour: 'numeric', 

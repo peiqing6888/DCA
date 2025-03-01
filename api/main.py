@@ -13,7 +13,7 @@ from urllib.parse import quote
 import logging
 import backoff
 
-# 配置日志
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="DCA AI Strategy API")
 
-# 配置 CORS
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -35,7 +35,7 @@ app.add_middleware(
 DEFILLAMA_API_BASE = "https://api.llama.fi"
 DEFILLAMA_COINS_API = "https://coins.llama.fi"
 
-# 支持的资产列表
+# Supported assets list
 SUPPORTED_ASSETS = {
     "BTC": "coingecko:bitcoin",
     "ETH": "coingecko:ethereum",
@@ -43,7 +43,7 @@ SUPPORTED_ASSETS = {
     "BNB": "coingecko:binancecoin"
 }
 
-# 重试装饰器
+# Retry decorator
 @backoff.on_exception(
     backoff.expo,
     (aiohttp.ClientError, asyncio.TimeoutError),
@@ -51,7 +51,7 @@ SUPPORTED_ASSETS = {
     max_time=30
 )
 async def fetch_with_retry(session: aiohttp.ClientSession, url: str) -> Dict:
-    """带重试机制的HTTP请求"""
+    """HTTP request with retry mechanism"""
     try:
         async with session.get(url, timeout=10) as response:
             if response.status != 200:
@@ -71,7 +71,7 @@ async def fetch_with_retry(session: aiohttp.ClientSession, url: str) -> Dict:
         raise
 
 async def get_token_price(token_id: str) -> Dict[str, Union[float, str]]:
-    """从DefiLlama获取代币价格"""
+    """Get token price from DefiLlama"""
     logger.info(f"Fetching price for token: {token_id}")
     async with aiohttp.ClientSession() as session:
         try:
@@ -101,7 +101,7 @@ async def get_token_price(token_id: str) -> Dict[str, Union[float, str]]:
             )
 
 async def get_token_chart(token_id: str, days: int = 30) -> List[Dict]:
-    """从DefiLlama获取代币历史价格数据"""
+    """Get token historical price data from DefiLlama"""
     logger.info(f"Fetching chart data for token: {token_id}, days: {days}")
     async with aiohttp.ClientSession() as session:
         try:
@@ -186,17 +186,17 @@ async def root():
 
 @app.get("/assets", response_model=List[Asset])
 async def get_assets():
-    """获取支持的资产列表及其当前市场数据"""
+    """Get list of supported assets and their current market data"""
     logger.info("Fetching assets data")
     result = []
     errors = []
     
     for symbol, token_id in SUPPORTED_ASSETS.items():
         try:
-            # 获取当前价格
+            # Get current price
             price_data = await get_token_price(token_id)
             
-            # 获取24小时历史数据计算涨跌幅
+            # Get 24h historical data to calculate change
             history = await get_token_chart(token_id, days=2)
             
             current_price = price_data["price"]
