@@ -30,8 +30,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files (NEVER commit these files)
+.env
+.env.*
+!.env.example
+api/.env
+api/.env.*
 
 # vercel
 .vercel
@@ -48,7 +52,6 @@ __pycache__/
 .Python
 api/venv/
 api/env/
-api/.env
 *.egg-info/
 dist/
 build/
@@ -81,3 +84,8 @@ logs/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# API Keys and Secrets
+**/api_keys.txt
+**/secrets.yaml
+**/credentials.json

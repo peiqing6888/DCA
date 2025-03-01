@@ -40,6 +40,15 @@ interface PerformanceMetric {
   roi: number;
 }
 
+// Add new type for market analysis
+interface MarketAnalysis {
+  sentiment: MarketSentiment;
+  confidence: number;
+  factors: string[];
+  prediction: string;
+  timestamp: string;
+}
+
 // AI Confidence Indicator component
 const ConfidenceIndicator = ({ value }: { value: number }) => (
   <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mac-border">
@@ -124,12 +133,13 @@ export default function DCAStrategy() {
   const [showAdvancedChart, setShowAdvancedChart] = useState(false);
   const [savedStrategies, setSavedStrategies] = useState<SavedStrategy[]>([]);
   
-  // Add: AI Analysis state
-  const [aiAnalysis, setAiAnalysis] = useState({
-    marketSentiment: 'Neutral' as MarketSentiment,
+  // Update AI Analysis state
+  const [aiAnalysis, setAiAnalysis] = useState<MarketAnalysis>({
+    sentiment: 'Neutral',
     confidence: 0.5,
-    lastUpdate: new Date(),
-    predictions: [] as string[],
+    factors: [],
+    prediction: '',
+    timestamp: new Date().toISOString()
   });
 
   // Add: Additional states
@@ -176,34 +186,32 @@ export default function DCAStrategy() {
     fetchSavedStrategies();
   }, []);
 
-  // Simulate AI analysis update
+  // Add function to fetch market analysis
+  const fetchMarketAnalysis = async (asset: string) => {
+    try {
+      const response = await fetch(`http://localhost:8000/market-analysis/${asset}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch market analysis');
+      }
+      const data = await response.json();
+      setAiAnalysis(data);
+      soundManager.play('notification');
+    } catch (error) {
+      console.error('Failed to fetch market analysis:', error);
+    }
+  };
+
+  // Update AI analysis effect
   useEffect(() => {
     if (!selectedAsset || !aiEnhanced) return;
 
-    const updateAiAnalysis = () => {
-      const sentiments: MarketSentiment[] = ['Bullish', 'Bearish', 'Neutral'];
-      const randomSentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
-      const randomConfidence = 0.5 + (Math.random() * 0.5); // Between 0.5 and 1.0
+    // Initial fetch
+    fetchMarketAnalysis(selectedAsset);
 
-      setAiAnalysis(prev => ({
-        ...prev,
-        marketSentiment: randomSentiment,
-        confidence: randomConfidence,
-        lastUpdate: new Date(),
-        predictions: [
-          'Market volatility expected to increase in short term',
-          'Recommend buying in batches during price corrections',
-          'Monitor macroeconomic indicator changes',
-        ],
-      }));
-
-      // Play retro computer notification sound
-      soundManager.play('notification');
-    };
-
-    // Update analysis every 30 seconds
-    const timer = setInterval(updateAiAnalysis, 30000);
-    updateAiAnalysis(); // Initial update
+    // Update analysis every 5 minutes
+    const timer = setInterval(() => {
+      fetchMarketAnalysis(selectedAsset);
+    }, 5 * 60 * 1000);
 
     return () => clearInterval(timer);
   }, [selectedAsset, aiEnhanced]);
@@ -473,17 +481,17 @@ export default function DCAStrategy() {
           <div className="mb-4">
             <h2 className="text-lg font-bold mac-text">AI Market Analysis</h2>
             <p className="text-xs text-gray-500">
-              Last updated: {aiAnalysis.lastUpdate.toLocaleTimeString()}
+              Last updated: {new Date(aiAnalysis.timestamp).toLocaleString()}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
-                <RetroGauge sentiment={aiAnalysis.marketSentiment} />
+                <RetroGauge sentiment={aiAnalysis.sentiment} />
                 <div>
                   <div className="text-sm font-bold">Market Sentiment</div>
-                  <div className="text-xs">{aiAnalysis.marketSentiment}</div>
+                  <div className="text-xs">{aiAnalysis.sentiment}</div>
                 </div>
               </div>
 
@@ -494,15 +502,22 @@ export default function DCAStrategy() {
             </div>
 
             <div className="border-l border-black pl-4">
-              <div className="text-sm font-bold mb-2">AI Predictions</div>
+              <div className="text-sm font-bold mb-2">Key Factors</div>
               <ul className="text-xs space-y-2">
-                {aiAnalysis.predictions.map((prediction, index) => (
+                {aiAnalysis.factors.map((factor, index) => (
                   <li key={index} className="flex items-start">
                     <span className="mr-2">•</span>
-                    <span>{prediction}</span>
+                    <span>{factor}</span>
                   </li>
                 ))}
               </ul>
+              
+              {aiAnalysis.prediction && (
+                <div className="mt-4">
+                  <div className="text-sm font-bold mb-2">AI Prediction</div>
+                  <p className="text-xs">{aiAnalysis.prediction}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

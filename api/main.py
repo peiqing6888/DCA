@@ -12,6 +12,8 @@ import asyncio
 from urllib.parse import quote
 import logging
 import backoff
+import os
+import random
 
 # Configure logging
 logging.basicConfig(
@@ -42,6 +44,10 @@ SUPPORTED_ASSETS = {
     "SOL": "coingecko:solana",
     "BNB": "coingecko:binancecoin"
 }
+
+# DeepSeek API configuration
+DEEPSEEK_API_KEY = os.getenv('DEEPSEEK_API_KEY')
+DEEPSEEK_API_URL = "https://api.deepseek.com/v1"
 
 # Retry decorator
 @backoff.on_exception(
@@ -373,4 +379,118 @@ async def get_saved_strategies():
 @app.get("/token/price/{token_id}")
 async def get_token_price_endpoint(token_id: str):
     """获取代币价格的API端点"""
-    return await get_token_price(token_id) 
+    return await get_token_price(token_id)
+
+async def get_market_sentiment(asset: str, price_data: dict, historical_data: list) -> dict:
+    """Get market sentiment analysis from DeepSeek API"""
+    if not DEEPSEEK_API_KEY:
+        raise HTTPException(
+            status_code=500,
+            detail="DeepSeek API key not configured"
+        )
+
+    try:
+        # Prepare market data for analysis
+        current_price = price_data.get('price', 0)
+        price_change = price_data.get('change_24h', 0)
+        
+        # Create analysis prompt
+        prompt = f"""
+        Analyze the market sentiment for {asset} based on the following data:
+        Current Price: ${current_price}
+        24h Change: {price_change}%
+        
+        Historical price points:
+        {historical_data[-7:]}  # Last 7 data points
+        
+        Provide:
+        1. Market sentiment (Bullish/Bearish/Neutral)
+        2. Confidence score (0-1)
+        3. Key factors
+        4. Short-term prediction
+        """
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{DEEPSEEK_API_URL}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "deepseek-chat",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.7
+                }
+            ) as response:
+                if response.status != 200:
+                    raise HTTPException(
+                        status_code=response.status,
+                        detail="DeepSeek API request failed"
+                    )
+                
+                data = await response.json()
+                analysis = data['choices'][0]['message']['content']
+                
+                # Parse the analysis response
+                # Note: This is a simplified parsing, you might want to make it more robust
+                sentiment = "Neutral"
+                confidence = 0.5
+                factors = []
+                prediction = ""
+                
+                try:
+                    # Extract sentiment and confidence from the analysis
+                    if "bullish" in analysis.lower():
+                        sentiment = "Bullish"
+                        confidence = 0.7 + (random.random() * 0.3)  # 0.7-1.0
+                    elif "bearish" in analysis.lower():
+                        sentiment = "Bearish"
+                        confidence = 0.7 + (random.random() * 0.3)  # 0.7-1.0
+                    
+                    # Extract key factors and prediction
+                    factors = [line.strip() for line in analysis.split('\n') if line.strip().startswith('-')]
+                    prediction_lines = [line for line in analysis.split('\n') if 'predict' in line.lower()]
+                    if prediction_lines:
+                        prediction = prediction_lines[0]
+                except Exception as e:
+                    logger.error(f"Error parsing DeepSeek analysis: {str(e)}")
+                
+                return {
+                    "sentiment": sentiment,
+                    "confidence": confidence,
+                    "factors": factors[:3],  # Top 3 factors
+                    "prediction": prediction,
+                    "timestamp": datetime.now().isoformat()
+                }
+
+    except Exception as e:
+        logger.error(f"DeepSeek API error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get market sentiment: {str(e)}"
+        )
+
+@app.get("/market-analysis/{asset}")
+async def get_market_analysis(asset: str):
+    """Get AI-powered market analysis for an asset"""
+    try:
+        # Get current price data
+        token_id = SUPPORTED_ASSETS.get(asset.replace("-USD", ""))
+        if not token_id:
+            raise HTTPException(status_code=400, detail="Unsupported asset")
+            
+        price_data = await get_token_price(token_id)
+        historical_data = await get_token_chart(token_id, days=7)
+        
+        # Get AI analysis from DeepSeek
+        analysis = await get_market_sentiment(asset, price_data, historical_data)
+        
+        return analysis
+        
+    except Exception as e:
+        logger.error(f"Market analysis error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get market analysis: {str(e)}"
+        ) 

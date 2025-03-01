@@ -1,14 +1,19 @@
 #!/bin/bash
 
-# 检查虚拟环境是否存在
+# Check if virtual environment exists
 if [ ! -d "venv" ]; then
-    echo "虚拟环境不存在，请先运行 setup.sh"
+    echo "Virtual environment not found, please run setup.sh first"
     exit 1
 fi
 
-# 激活虚拟环境
+# Activate virtual environment
 source venv/bin/activate
 
-# 启动服务
-echo "启动后端服务..."
+# Load environment variables from .env file
+if [ -f .env ]; then
+    export $(cat .env | xargs)
+fi
+
+# Start the service
+echo "Starting backend service..."
 uvicorn main:app --host 127.0.0.1 --port 8000 --reload 
