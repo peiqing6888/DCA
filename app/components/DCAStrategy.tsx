@@ -9,6 +9,9 @@ import AdvancedChart from './AdvancedChart';
 type Frequency = 'daily' | 'weekly' | 'monthly';
 type TimeRange = '1D' | '1W' | '1M' | '3M' | '1Y';
 
+// 市场情绪类型
+type MarketSentiment = 'Bullish' | 'Bearish' | 'Neutral';
+
 interface Strategy {
   asset: string;
   amount: number;
@@ -24,6 +27,91 @@ interface SavedStrategy {
   recommendation: DCARecommendation;
 }
 
+interface Notification {
+  id: string;
+  type: 'success' | 'warning' | 'info';
+  message: string;
+  timestamp: Date;
+}
+
+interface PerformanceMetric {
+  date: Date;
+  investment: number;
+  value: number;
+  roi: number;
+}
+
+// AI 信心度指示器组件
+const ConfidenceIndicator = ({ value }: { value: number }) => (
+  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mac-border">
+    <div 
+      className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 transition-all duration-500"
+      style={{ width: `${value * 100}%` }}
+    />
+  </div>
+);
+
+// 复古风格的仪表盘组件
+const RetroGauge = ({ sentiment }: { sentiment: MarketSentiment }) => {
+  const getColor = () => {
+    switch (sentiment) {
+      case 'Bullish': return 'bg-green-500';
+      case 'Bearish': return 'bg-red-500';
+      default: return 'bg-yellow-500';
+    }
+  };
+
+  return (
+    <div className="relative w-20 h-20 rounded-full border-4 border-black flex items-center justify-center">
+      <div className={`absolute w-4 h-4 rounded-full ${getColor()} shadow-lg`} />
+      <div className="text-xs font-bold">{sentiment}</div>
+    </div>
+  );
+};
+
+// 通知组件
+const NotificationBadge = ({ notifications }: { notifications: Notification[] }) => (
+  <div className="mac-window p-2 max-h-40 overflow-auto">
+    {notifications.map(notification => (
+      <div 
+        key={notification.id}
+        className={cn(
+          "mb-2 p-2 text-xs rounded mac-border",
+          notification.type === 'success' ? 'bg-green-100' :
+          notification.type === 'warning' ? 'bg-yellow-100' : 'bg-blue-100'
+        )}
+      >
+        <div className="font-bold">{notification.message}</div>
+        <div className="text-[10px] text-gray-500">
+          {notification.timestamp.toLocaleTimeString()}
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+// 性能指标组件
+const PerformanceMetrics = ({ metrics }: { metrics: PerformanceMetric[] }) => (
+  <div className="space-y-2">
+    <div className="grid grid-cols-3 gap-2">
+      <div className="mac-window p-2 text-center">
+        <div className="text-xs font-bold">Total Investment</div>
+        <div className="text-sm">${metrics.reduce((sum, m) => sum + m.investment, 0).toFixed(2)}</div>
+      </div>
+      <div className="mac-window p-2 text-center">
+        <div className="text-xs font-bold">Current Value</div>
+        <div className="text-sm">${metrics.reduce((sum, m) => sum + m.value, 0).toFixed(2)}</div>
+      </div>
+      <div className="mac-window p-2 text-center">
+        <div className="text-xs font-bold">Average ROI</div>
+        <div className="text-sm">
+          {(metrics.reduce((sum, m) => sum + m.roi, 0) / metrics.length).toFixed(2)}%
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function DCAStrategy() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(false);
@@ -36,6 +124,19 @@ export default function DCAStrategy() {
   const [recommendation, setRecommendation] = useState<DCARecommendation | null>(null);
   const [showAdvancedChart, setShowAdvancedChart] = useState(false);
   const [savedStrategies, setSavedStrategies] = useState<SavedStrategy[]>([]);
+  
+  // 新增：AI 分析状态
+  const [aiAnalysis, setAiAnalysis] = useState({
+    marketSentiment: 'Neutral' as MarketSentiment,
+    confidence: 0.5,
+    lastUpdate: new Date(),
+    predictions: [] as string[],
+  });
+
+  // 新增状态
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetric[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     const fetchAssets = async () => {
@@ -75,6 +176,118 @@ export default function DCAStrategy() {
 
     fetchSavedStrategies();
   }, []);
+
+  // 模拟 AI 分析更新
+  useEffect(() => {
+    if (!selectedAsset || !aiEnhanced) return;
+
+    const updateAiAnalysis = () => {
+      const sentiments: MarketSentiment[] = ['Bullish', 'Bearish', 'Neutral'];
+      const randomSentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
+      const randomConfidence = 0.5 + (Math.random() * 0.5); // 0.5 到 1.0 之间
+
+      setAiAnalysis(prev => ({
+        ...prev,
+        marketSentiment: randomSentiment,
+        confidence: randomConfidence,
+        lastUpdate: new Date(),
+        predictions: [
+          '预计短期内市场波动加剧',
+          '建议在价格回调时分批买入',
+          '关注宏观经济指标变化',
+        ],
+      }));
+
+      // 播放复古电脑提示音
+      soundManager.play('notification');
+    };
+
+    // 每30秒更新一次分析
+    const timer = setInterval(updateAiAnalysis, 30000);
+    updateAiAnalysis(); // 初始更新
+
+    return () => clearInterval(timer);
+  }, [selectedAsset, aiEnhanced]);
+
+  // 模拟生成性能指标
+  useEffect(() => {
+    if (!selectedAsset) return;
+
+    const generateMetrics = () => {
+      const metrics: PerformanceMetric[] = [];
+      let totalInvestment = amount;
+      
+      for (let i = 0; i < 6; i++) {
+        const randomROI = -10 + Math.random() * 30; // -10% to +20%
+        const value = totalInvestment * (1 + randomROI / 100);
+        
+        metrics.push({
+          date: new Date(Date.now() - i * 30 * 24 * 60 * 60 * 1000),
+          investment: totalInvestment,
+          value: value,
+          roi: randomROI
+        });
+
+        totalInvestment += amount;
+      }
+
+      setPerformanceMetrics(metrics.reverse());
+    };
+
+    generateMetrics();
+  }, [selectedAsset, amount]);
+
+  // 模拟生成智能通知
+  useEffect(() => {
+    if (!selectedAsset || !aiEnhanced) return;
+
+    const generateNotification = () => {
+      const notificationTypes = [
+        {
+          type: 'success',
+          messages: [
+            '最佳买入时机：当前价格低于30日均线',
+            'AI预测：市场即将触底反弹',
+            '建议：增加定投金额以把握机会'
+          ]
+        },
+        {
+          type: 'warning',
+          messages: [
+            '注意：市场波动性增加',
+            '建议：考虑分散投资降低风险',
+            '提醒：下一次定投日期临近'
+          ]
+        },
+        {
+          type: 'info',
+          messages: [
+            '市场分析：主要指标趋势向好',
+            '策略提示：保持当前定投计划',
+            'AI洞察：机构资金流入增加'
+          ]
+        }
+      ];
+
+      const randomType = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
+      const randomMessage = randomType.messages[Math.floor(Math.random() * randomType.messages.length)];
+
+      const newNotification: Notification = {
+        id: Date.now().toString(),
+        type: randomType.type as 'success' | 'warning' | 'info',
+        message: randomMessage,
+        timestamp: new Date()
+      };
+
+      setNotifications(prev => [newNotification, ...prev].slice(0, 5));
+      soundManager.play('notification');
+    };
+
+    const timer = setInterval(generateNotification, 45000);
+    generateNotification(); // 初始通知
+
+    return () => clearInterval(timer);
+  }, [selectedAsset, aiEnhanced]);
 
   const handleAnalyze = async () => {
     setLoading(true);
@@ -255,6 +468,47 @@ export default function DCAStrategy() {
         </div>
       </div>
 
+      {/* AI 分析仪表盘 */}
+      {aiEnhanced && (
+        <div className="mac-window p-4 rounded">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold mac-text">AI Market Analysis</h2>
+            <p className="text-xs text-gray-500">
+              Last updated: {aiAnalysis.lastUpdate.toLocaleTimeString()}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <RetroGauge sentiment={aiAnalysis.marketSentiment} />
+                <div>
+                  <div className="text-sm font-bold">Market Sentiment</div>
+                  <div className="text-xs">{aiAnalysis.marketSentiment}</div>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm font-bold mb-2">AI Confidence</div>
+                <ConfidenceIndicator value={aiAnalysis.confidence} />
+              </div>
+            </div>
+
+            <div className="border-l border-black pl-4">
+              <div className="text-sm font-bold mb-2">AI Predictions</div>
+              <ul className="text-xs space-y-2">
+                {aiAnalysis.predictions.map((prediction, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="mr-2">•</span>
+                    <span>{prediction}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Advanced Chart Modal */}
       {showAdvancedChart && (
         <AdvancedChart
@@ -320,6 +574,35 @@ export default function DCAStrategy() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* 智能通知按钮 */}
+      {aiEnhanced && notifications.length > 0 && (
+        <div className="fixed bottom-4 right-4">
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="relative mac-button p-2"
+          >
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center">
+              {notifications.length}
+            </span>
+            📬
+          </button>
+          
+          {showNotifications && (
+            <div className="absolute bottom-12 right-0 w-64">
+              <NotificationBadge notifications={notifications} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 性能分析面板 */}
+      {performanceMetrics.length > 0 && (
+        <div className="mac-window p-4 rounded">
+          <h2 className="text-lg font-bold mac-text mb-4">Strategy Performance</h2>
+          <PerformanceMetrics metrics={performanceMetrics} />
         </div>
       )}
     </div>
