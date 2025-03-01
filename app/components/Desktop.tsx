@@ -435,7 +435,7 @@ export default function Desktop() {
                 onClick={() => handleMenuClick(key)}
               >
                 {key === 'apple' ? (
-                  <img src="/apple.png" alt="Apple" className="h-3 w-3 inline" />
+                  <img src="/apple-3.png" alt="Apple" className="h-3 w-3 inline" />
                 ) : (
                   key.charAt(0).toUpperCase() + key.slice(1)
                 )}
