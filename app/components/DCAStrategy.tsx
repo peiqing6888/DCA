@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { type Asset, type DCARecommendation, getAssets, analyzeDCAStrategy } from '@/lib/api';
 import { soundManager } from '@/lib/sounds';
 import { cn } from '@/lib/utils';
-import AssetChart from './AssetChart';
+import AdvancedChart from './AdvancedChart';
 
 type Frequency = 'daily' | 'weekly' | 'monthly';
 type TimeRange = '1D' | '1W' | '1M' | '3M' | '1Y';
@@ -34,9 +34,8 @@ export default function DCAStrategy() {
   const [frequency, setFrequency] = useState<Frequency>('monthly');
   const [aiEnhanced, setAiEnhanced] = useState(true);
   const [recommendation, setRecommendation] = useState<DCARecommendation | null>(null);
-  const [timeRange, setTimeRange] = useState<TimeRange>('1M');
+  const [showAdvancedChart, setShowAdvancedChart] = useState(false);
   const [savedStrategies, setSavedStrategies] = useState<SavedStrategy[]>([]);
-  const [chartError, setChartError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAssets = async () => {
@@ -157,7 +156,6 @@ export default function DCAStrategy() {
                 value={selectedAsset}
                 onChange={(e) => {
                   setSelectedAsset(e.target.value);
-                  setChartError(null);
                 }}
                 className="w-full px-3 py-2 bg-white border-2 border-black rounded cursor-pointer appearance-none"
                 disabled={loading}
@@ -189,39 +187,15 @@ export default function DCAStrategy() {
             )}
           </div>
 
-          {/* 价格图表 */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-bold mac-text">Price Chart</label>
-              <div className="flex gap-2">
-                {(['1D', '1W', '1M', '3M', '1Y'] as TimeRange[]).map((range) => (
-                  <button
-                    key={range}
-                    onClick={() => setTimeRange(range)}
-                    className={cn(
-                      "px-2 py-1 text-xs border-2 border-black rounded",
-                      timeRange === range
-                        ? "bg-black text-white"
-                        : "bg-white hover:bg-gray-100"
-                    )}
-                  >
-                    {range}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {chartError && (
-              <div className="p-2 text-sm text-red-600">
-                {chartError}
-              </div>
-            )}
-            <div className="border-2 border-black rounded p-2 bg-white">
-              <AssetChart
-                symbol={selectedAsset}
-                timeRange={timeRange}
-                onError={setChartError}
-              />
-            </div>
+          {/* 价格图表按钮 */}
+          <div className="py-2">
+            <button
+              onClick={() => setShowAdvancedChart(true)}
+              className="w-full px-4 py-2 bg-[#666666] hover:bg-[#777777] text-white font-bold rounded border-2 border-black flex items-center justify-center gap-2"
+              disabled={!selectedAsset || loading}
+            >
+              <span>📈</span> View Price Chart
+            </button>
           </div>
 
           <div className="space-y-2">
@@ -263,10 +237,10 @@ export default function DCAStrategy() {
 
           <button
             onClick={handleAnalyze}
-            disabled={loading}
+            disabled={loading || !selectedAsset}
             className={cn(
               "w-full px-4 py-2 text-white font-bold rounded border-2 border-black relative",
-              loading ? "bg-gray-500" : "bg-[#666666] hover:bg-[#777777]"
+              loading || !selectedAsset ? "bg-gray-500" : "bg-[#666666] hover:bg-[#777777]"
             )}
           >
             {loading && (
@@ -280,6 +254,14 @@ export default function DCAStrategy() {
           </button>
         </div>
       </div>
+
+      {/* Advanced Chart Modal */}
+      {showAdvancedChart && (
+        <AdvancedChart
+          symbol={selectedAsset}
+          onClose={() => setShowAdvancedChart(false)}
+        />
+      )}
 
       {recommendation && (
         <div className="mac-window p-4 rounded">

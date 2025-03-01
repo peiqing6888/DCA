@@ -6,6 +6,13 @@ export interface Asset {
   volume_24h: number;
 }
 
+export interface ChartData {
+  date: string;
+  price: number;
+  sma50: number;
+  sma200: number;
+}
+
 export interface DCAStrategy {
   asset: string;
   amount: number;
@@ -71,6 +78,16 @@ export async function getTokenPrice(tokenId: string): Promise<TokenPrice> {
   
   if (!response.ok) {
     throw new Error('Failed to fetch token price');
+  }
+
+  return await response.json();
+}
+
+export async function getChartData(symbol: string, range: string): Promise<ChartData[]> {
+  const response = await fetch(`${API_BASE_URL}/assets/${symbol}/chart?range=${range}`);
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch chart data');
   }
 
   return await response.json();
