@@ -4,7 +4,7 @@ A NERV-themed (Neon Genesis Evangelion) Dollar-Cost Averaging (DCA) strategy app
 
 ## Demo
 
-https://github.com/peiqing6888/dca/public/demo.mov
+https://x.com/peiqing6888/status/1897141400615166090
 
 Watch the demo video to see the NERV-themed DCA Strategy app in action, featuring:
 
