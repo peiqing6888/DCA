@@ -12,11 +12,13 @@
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
   --nerv-bg: #1a1a1a;
+  --nerv-bg-darker: #0f0f0f;
   --nerv-text-primary: #00ff00;
   --nerv-text-secondary: #ff6600;
   --nerv-text-warning: #ff0000;
   --nerv-border: #33ff33;
   --nerv-grid: rgba(51, 255, 51, 0.1);
+  --nerv-overlay: rgba(0, 255, 0, 0.05);
 }
 
 body {
@@ -79,6 +81,35 @@ body {
     linear-gradient(0deg, var(--nerv-grid) 1px, transparent 1px) 0 0 / 20px 20px;
   pointer-events: none;
   opacity: 0.5;
+  animation: gridPulse 4s infinite linear;
+}
+
+.nerv-window::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    var(--nerv-overlay) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  animation: scanline 3s infinite linear;
+}
+
+@keyframes gridPulse {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.5; }
+  100% { opacity: 0.3; }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
 }
 
 .nerv-text {
@@ -104,29 +135,83 @@ body {
   font-family: 'OCR-A', monospace;
   padding: 0.5rem 1rem;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.nerv-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 255, 0, 0.2),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.nerv-button:hover::before {
+  left: 100%;
 }
 
 .nerv-button:hover {
-  background-color: var(--nerv-text-primary);
-  color: var(--nerv-bg);
+  background-color: rgba(0, 255, 0, 0.1);
   box-shadow: 0 0 10px var(--nerv-text-primary);
 }
 
 .nerv-input {
-  background-color: var(--nerv-bg);
+  background-color: var(--nerv-bg-darker);
   border: 1px solid var(--nerv-text-primary);
   color: var(--nerv-text-primary);
   font-family: 'OCR-A', monospace;
   padding: 0.5rem;
+  transition: all 0.3s ease;
 }
 
 .nerv-input:focus {
   box-shadow: 0 0 10px var(--nerv-text-primary);
   outline: none;
+  background-color: rgba(0, 255, 0, 0.1);
+}
+
+.nerv-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .nerv-border {
   border-color: var(--nerv-text-primary);
+}
+
+/* Hexagon decoration */
+.nerv-hexagon {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background: var(--nerv-text-primary);
+  box-shadow: 0 0 10px var(--nerv-text-primary);
+}
+
+/* Scrollbar styling */
+.nerv-window::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.nerv-window::-webkit-scrollbar-track {
+  background: var(--nerv-bg-darker);
+}
+
+.nerv-window::-webkit-scrollbar-thumb {
+  background: var(--nerv-text-primary);
+  border-radius: 0;
+}
+
+.nerv-window::-webkit-scrollbar-thumb:hover {
+  background: var(--nerv-text-secondary);
 }
 
 @layer base {

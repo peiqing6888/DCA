@@ -51,11 +51,16 @@ interface MarketAnalysis {
 
 // AI Confidence Indicator component
 const ConfidenceIndicator = ({ value }: { value: number }) => (
-  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mac-border">
+  <div className="relative w-full h-4 nerv-window overflow-hidden">
     <div 
-      className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 transition-all duration-500"
+      className="h-full bg-[#00ff00] transition-all duration-500 relative"
       style={{ width: `${value * 100}%` }}
-    />
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[rgba(0,255,0,0.2)] to-transparent animate-pulse"></div>
+    </div>
+    <div className="absolute top-0 left-0 w-full h-full" style={{
+      background: 'repeating-linear-gradient(90deg, rgba(0,255,0,0.1) 0px, rgba(0,255,0,0.1) 4px, transparent 4px, transparent 8px)'
+    }}></div>
   </div>
 );
 
@@ -63,34 +68,62 @@ const ConfidenceIndicator = ({ value }: { value: number }) => (
 const RetroGauge = ({ sentiment }: { sentiment: MarketSentiment }) => {
   const getColor = () => {
     switch (sentiment) {
-      case 'Bullish': return 'bg-green-500';
-      case 'Bearish': return 'bg-red-500';
-      default: return 'bg-yellow-500';
+      case 'Bullish': return '#00ff00';
+      case 'Bearish': return '#ff0000';
+      default: return '#ff6600';
     }
   };
 
+  const color = getColor();
+
   return (
-    <div className="relative w-20 h-20 rounded-full border-4 border-black flex items-center justify-center">
-      <div className={`absolute w-4 h-4 rounded-full ${getColor()} shadow-lg`} />
-      <div className="text-xs font-bold">{sentiment}</div>
+    <div className="relative w-24 h-24">
+      <div className="absolute inset-0 nerv-window rounded-full flex items-center justify-center">
+        <div className="relative w-20 h-20">
+          <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              fill="none"
+              stroke={color}
+              strokeWidth="2"
+              strokeDasharray="283"
+              strokeDashoffset={283 * (1 - (sentiment === 'Bullish' ? 1 : sentiment === 'Bearish' ? 0 : 0.5))}
+              className="transition-all duration-1000"
+            />
+          </svg>
+          <div 
+            className="absolute inset-0 flex items-center justify-center text-xs font-bold"
+            style={{ color, textShadow: `0 0 5px ${color}` }}
+          >
+            {sentiment}
+          </div>
+        </div>
+      </div>
+      <div className="absolute -top-1 -right-1 w-3 h-3" style={{
+        background: color,
+        boxShadow: `0 0 10px ${color}`,
+        clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'
+      }}></div>
     </div>
   );
 };
 
 // Notification component
 const NotificationBadge = ({ notifications }: { notifications: Notification[] }) => (
-  <div className="mac-window p-2 max-h-40 overflow-auto">
+  <div className="nerv-window p-2 max-h-40 overflow-auto">
     {notifications.map(notification => (
       <div 
         key={notification.id}
         className={cn(
-          "mb-2 p-2 text-xs rounded mac-border",
-          notification.type === 'success' ? 'bg-green-100' :
-          notification.type === 'warning' ? 'bg-yellow-100' : 'bg-blue-100'
+          "mb-2 p-2 text-xs rounded nerv-window",
+          notification.type === 'success' ? 'nerv-text' :
+          notification.type === 'warning' ? 'nerv-text-warning' : 'nerv-text-secondary'
         )}
       >
         <div className="font-bold">{notification.message}</div>
-        <div className="text-[10px] text-gray-500">
+        <div className="text-[10px] opacity-70">
           {notification.timestamp.toLocaleTimeString()}
         </div>
       </div>
@@ -102,17 +135,20 @@ const NotificationBadge = ({ notifications }: { notifications: Notification[] })
 const PerformanceMetrics = ({ metrics }: { metrics: PerformanceMetric[] }) => (
   <div className="space-y-2">
     <div className="grid grid-cols-3 gap-2">
-      <div className="mac-window p-2 text-center">
-        <div className="text-xs font-bold">Total Investment</div>
-        <div className="text-sm">${metrics.reduce((sum, m) => sum + m.investment, 0).toFixed(2)}</div>
+      <div className="nerv-window p-2 text-center">
+        <div className="text-xs font-bold nerv-text">Total Investment</div>
+        <div className="text-sm nerv-text-secondary">${metrics.reduce((sum, m) => sum + m.investment, 0).toFixed(2)}</div>
       </div>
-      <div className="mac-window p-2 text-center">
-        <div className="text-xs font-bold">Current Value</div>
-        <div className="text-sm">${metrics.reduce((sum, m) => sum + m.value, 0).toFixed(2)}</div>
+      <div className="nerv-window p-2 text-center">
+        <div className="text-xs font-bold nerv-text">Current Value</div>
+        <div className="text-sm nerv-text-secondary">${metrics.reduce((sum, m) => sum + m.value, 0).toFixed(2)}</div>
       </div>
-      <div className="mac-window p-2 text-center">
-        <div className="text-xs font-bold">Average ROI</div>
-        <div className="text-sm">
+      <div className="nerv-window p-2 text-center">
+        <div className="text-xs font-bold nerv-text">Average ROI</div>
+        <div className={cn(
+          "text-sm",
+          metrics.reduce((sum, m) => sum + m.roi, 0) / metrics.length > 0 ? 'nerv-text' : 'nerv-text-warning'
+        )}>
           {(metrics.reduce((sum, m) => sum + m.roi, 0) / metrics.length).toFixed(2)}%
         </div>
       </div>
@@ -345,11 +381,11 @@ export default function DCAStrategy() {
   if (initialLoading) {
     return (
       <div className="space-y-4 p-4">
-        <div className="mac-window p-4 rounded">
+        <div className="nerv-window p-4 rounded">
           <div className="flex items-center justify-center h-32">
             <div className="text-center">
-              <div className="mb-2">Loading assets...</div>
-              <div className="w-8 h-8 border-4 border-t-[#666666] border-r-[#666666] border-b-[#666666] border-l-transparent rounded-full animate-spin"></div>
+              <div className="mb-2 nerv-text">Loading assets...</div>
+              <div className="w-8 h-8 border-4 border-t-[#00ff00] border-r-[#00ff00] border-b-[#00ff00] border-l-transparent rounded-full animate-spin"></div>
             </div>
           </div>
         </div>
@@ -359,12 +395,12 @@ export default function DCAStrategy() {
 
   return (
     <div className="space-y-4 p-4">
-      <div className="nerv-window p-4 rounded">
+      <div className="nerv-window p-4 rounded relative">
         <div className="mb-4">
           <h2 className="text-lg font-bold nerv-text">DCA Strategy Analysis</h2>
         </div>
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border-2 border-red-500 rounded nerv-text-warning">
+          <div className="mb-4 p-3 nerv-window nerv-text-warning">
             {error}
           </div>
         )}
@@ -377,7 +413,7 @@ export default function DCAStrategy() {
                 onChange={(e) => {
                   setSelectedAsset(e.target.value);
                 }}
-                className="w-full px-3 py-2 nerv-input rounded"
+                className="w-full px-3 py-2 nerv-input rounded appearance-none pr-8"
                 disabled={loading}
               >
                 <option value="">Select an asset</option>
@@ -387,7 +423,7 @@ export default function DCAStrategy() {
                   </option>
                 ))}
               </select>
-              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none nerv-text">
+              <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none nerv-text">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -407,7 +443,6 @@ export default function DCAStrategy() {
             )}
           </div>
 
-          {/* Price chart button */}
           <div className="py-2">
             <button
               onClick={() => setShowAdvancedChart(true)}
@@ -432,16 +467,23 @@ export default function DCAStrategy() {
 
           <div className="space-y-2">
             <label className="block text-sm font-bold nerv-text">Frequency</label>
-            <select
-              value={frequency}
-              onChange={(e) => setFrequency(e.target.value as Frequency)}
-              className="w-full nerv-input rounded"
-              disabled={loading}
-            >
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
+            <div className="relative">
+              <select
+                value={frequency}
+                onChange={(e) => setFrequency(e.target.value as Frequency)}
+                className="w-full px-3 py-2 nerv-input rounded appearance-none pr-8"
+                disabled={loading}
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+              <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none nerv-text">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -473,11 +515,14 @@ export default function DCAStrategy() {
             </span>
           </button>
         </div>
+        
+        {/* Hexagon decoration */}
+        <div className="absolute -top-1 -right-1 w-3 h-3 nerv-hexagon"></div>
       </div>
 
       {/* AI Analysis Dashboard */}
       {aiEnhanced && (
-        <div className="nerv-window p-4 rounded">
+        <div className="nerv-window p-4 rounded relative">
           <div className="mb-4">
             <h2 className="text-lg font-bold nerv-text">AI Market Analysis</h2>
             <p className="text-xs nerv-text-secondary">
@@ -490,36 +535,39 @@ export default function DCAStrategy() {
               <div className="flex items-center space-x-4">
                 <RetroGauge sentiment={aiAnalysis.sentiment} />
                 <div>
-                  <div className="text-sm font-bold">Market Sentiment</div>
-                  <div className="text-xs">{aiAnalysis.sentiment}</div>
+                  <div className="text-sm font-bold nerv-text">Market Sentiment</div>
+                  <div className="text-xs nerv-text-secondary">{aiAnalysis.sentiment}</div>
                 </div>
               </div>
 
               <div>
-                <div className="text-sm font-bold mb-2">AI Confidence</div>
+                <div className="text-sm font-bold mb-2 nerv-text">AI Confidence</div>
                 <ConfidenceIndicator value={aiAnalysis.confidence} />
               </div>
             </div>
 
-            <div className="border-l border-black pl-4">
-              <div className="text-sm font-bold mb-2">Key Factors</div>
+            <div className="border-l border-[#00ff00]/20 pl-4">
+              <div className="text-sm font-bold mb-2 nerv-text">Key Factors</div>
               <ul className="text-xs space-y-2">
                 {aiAnalysis.factors.map((factor, index) => (
                   <li key={index} className="flex items-start">
-                    <span className="mr-2">•</span>
-                    <span>{factor}</span>
+                    <span className="mr-2 nerv-text">•</span>
+                    <span className="nerv-text-secondary">{factor}</span>
                   </li>
                 ))}
               </ul>
               
               {aiAnalysis.prediction && (
                 <div className="mt-4">
-                  <div className="text-sm font-bold mb-2">AI Prediction</div>
-                  <p className="text-xs">{aiAnalysis.prediction}</p>
+                  <div className="text-sm font-bold mb-2 nerv-text">AI Prediction</div>
+                  <p className="text-xs nerv-text-secondary">{aiAnalysis.prediction}</p>
                 </div>
               )}
             </div>
           </div>
+          
+          {/* Hexagon decoration */}
+          <div className="absolute -top-1 -right-1 w-3 h-3 nerv-hexagon"></div>
         </div>
       )}
 
@@ -532,62 +580,96 @@ export default function DCAStrategy() {
       )}
 
       {recommendation && (
-        <div className="mac-window p-4 rounded">
+        <div className="nerv-window p-4 rounded relative">
           <div className="mb-4">
-            <h2 className="text-lg font-bold mac-text">Strategy Recommendation</h2>
+            <h2 className="text-lg font-bold nerv-text">Strategy Recommendation</h2>
           </div>
           <div className="space-y-2">
-            <p><strong>Optimal Entry Price:</strong> ${recommendation.optimal_entry_price.toFixed(2)}</p>
-            <p><strong>Market Sentiment:</strong> {recommendation.sentiment}</p>
-            <p><strong>Confidence:</strong> {(recommendation.confidence * 100).toFixed(1)}%</p>
-            <p><strong>Next DCA Date:</strong> {recommendation.next_dca_date.toLocaleDateString()}</p>
-            <p><strong>Suggested Amount:</strong> ${recommendation.suggested_amount.toFixed(2)}</p>
-            <div>
+            <p className="nerv-text">
+              <strong>Optimal Entry Price:</strong> ${recommendation.optimal_entry_price.toFixed(2)}
+            </p>
+            <p className="nerv-text">
+              <strong>Market Sentiment:</strong> {recommendation.sentiment}
+            </p>
+            <p className="nerv-text">
+              <strong>Confidence:</strong> {(recommendation.confidence * 100).toFixed(1)}%
+            </p>
+            <p className="nerv-text">
+              <strong>Next DCA Date:</strong> {recommendation.next_dca_date.toLocaleDateString()}
+            </p>
+            <p className="nerv-text">
+              <strong>Suggested Amount:</strong> ${recommendation.suggested_amount.toFixed(2)}
+            </p>
+            <div className="nerv-text">
               <strong>Market Conditions:</strong>
-              <ul className="list-disc pl-5 mt-1">
+              <ul className="list-none pl-5 mt-1 space-y-1">
                 {recommendation.market_conditions.map((condition, index) => (
-                  <li key={index}>{condition}</li>
+                  <li key={index} className="flex items-center space-x-2">
+                    <div className="w-2 h-2 nerv-hexagon"></div>
+                    <span>{condition}</span>
+                  </li>
                 ))}
               </ul>
             </div>
           </div>
+          
+          {/* Hexagon decoration */}
+          <div className="absolute -top-1 -right-1 w-3 h-3 nerv-hexagon"></div>
         </div>
       )}
 
+      {/* Strategy History */}
       {savedStrategies.length > 0 && (
-        <div className="mac-window p-4 rounded">
+        <div className="nerv-window p-4 rounded relative">
           <div className="mb-4">
-            <h2 className="text-lg font-bold mac-text">Strategy History</h2>
+            <h2 className="text-lg font-bold nerv-text">Strategy History</h2>
           </div>
           <div className="space-y-4">
             {savedStrategies.map((saved) => (
               <div
                 key={saved.id}
-                className="p-3 border-2 border-black rounded bg-white"
+                className="nerv-window p-3 rounded relative"
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-bold">{saved.strategy.asset}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-bold nerv-text">{saved.strategy.asset}</p>
+                    <p className="text-sm nerv-text-secondary">
                       {new Date(saved.created_at).toLocaleString()}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p>${saved.strategy.amount}</p>
-                    <p className="text-sm capitalize">{saved.strategy.frequency}</p>
+                    <p className="nerv-text">${saved.strategy.amount}</p>
+                    <p className="text-sm nerv-text capitalize">{saved.strategy.frequency}</p>
                   </div>
                 </div>
-                <div className="mt-2 pt-2 border-t border-black/20">
-                  <p className="text-sm">
+                <div className="mt-2 pt-2 border-t border-[#00ff00]/20">
+                  <p className="text-sm nerv-text">
                     <strong>Sentiment:</strong> {saved.recommendation.sentiment}
                   </p>
-                  <p className="text-sm">
+                  <p className="text-sm nerv-text">
                     <strong>Entry Price:</strong> ${saved.recommendation.optimal_entry_price.toFixed(2)}
                   </p>
                 </div>
+                
+                {/* Hexagon decoration */}
+                <div className="absolute -top-1 -right-1 w-2 h-2 nerv-hexagon"></div>
               </div>
             ))}
           </div>
+          
+          {/* Hexagon decoration */}
+          <div className="absolute -top-1 -right-1 w-3 h-3 nerv-hexagon"></div>
+        </div>
+      )}
+
+      {/* Performance Analysis Panel */}
+      {performanceMetrics.length > 0 && (
+        <div className="nerv-window p-4 rounded relative">
+          <h2 className="text-lg font-bold nerv-text mb-4">Strategy Performance</h2>
+          <PerformanceMetrics metrics={performanceMetrics} />
+          
+          {/* Hexagon decoration */}
+          <div className="absolute -top-1 -right-1 w-3 h-3 nerv-hexagon"></div>
         </div>
       )}
 
@@ -596,12 +678,12 @@ export default function DCAStrategy() {
         <div className="fixed bottom-4 right-4">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative mac-button p-2"
+            className="relative nerv-button p-2"
           >
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#ff0000] text-black text-[10px] flex items-center justify-center nerv-hexagon">
               {notifications.length}
             </span>
-            📬
+            <span className="nerv-text">📬</span>
           </button>
           
           {showNotifications && (
@@ -609,14 +691,6 @@ export default function DCAStrategy() {
               <NotificationBadge notifications={notifications} />
             </div>
           )}
-        </div>
-      )}
-
-      {/* Performance Analysis Panel */}
-      {performanceMetrics.length > 0 && (
-        <div className="mac-window p-4 rounded">
-          <h2 className="text-lg font-bold mac-text mb-4">Strategy Performance</h2>
-          <PerformanceMetrics metrics={performanceMetrics} />
         </div>
       )}
     </div>
