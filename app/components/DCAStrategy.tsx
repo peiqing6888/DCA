@@ -359,25 +359,25 @@ export default function DCAStrategy() {
 
   return (
     <div className="space-y-4 p-4">
-      <div className="mac-window p-4 rounded">
+      <div className="nerv-window p-4 rounded">
         <div className="mb-4">
-          <h2 className="text-lg font-bold mac-text">DCA Strategy Analysis</h2>
+          <h2 className="text-lg font-bold nerv-text">DCA Strategy Analysis</h2>
         </div>
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border-2 border-red-500 rounded text-red-700">
+          <div className="mb-4 p-3 bg-red-100 border-2 border-red-500 rounded nerv-text-warning">
             {error}
           </div>
         )}
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="block text-sm font-bold mac-text">Asset</label>
+            <label className="block text-sm font-bold nerv-text">Asset</label>
             <div className="relative">
               <select
                 value={selectedAsset}
                 onChange={(e) => {
                   setSelectedAsset(e.target.value);
                 }}
-                className="w-full px-3 py-2 bg-white border-2 border-black rounded cursor-pointer appearance-none"
+                className="w-full px-3 py-2 nerv-input rounded"
                 disabled={loading}
               >
                 <option value="">Select an asset</option>
@@ -387,8 +387,8 @@ export default function DCAStrategy() {
                   </option>
                 ))}
               </select>
-              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none nerv-text">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
@@ -398,8 +398,8 @@ export default function DCAStrategy() {
                 <span className={cn(
                   "font-medium",
                   assets.find(a => a.symbol === selectedAsset)?.change_24h || 0 > 0 
-                    ? "text-green-600" 
-                    : "text-red-600"
+                    ? "nerv-text" 
+                    : "nerv-text-warning"
                 )}>
                   24h Change: {assets.find(a => a.symbol === selectedAsset)?.change_24h.toFixed(2)}%
                 </span>
@@ -411,7 +411,7 @@ export default function DCAStrategy() {
           <div className="py-2">
             <button
               onClick={() => setShowAdvancedChart(true)}
-              className="w-full px-4 py-2 bg-[#666666] hover:bg-[#777777] text-white font-bold rounded border-2 border-black flex items-center justify-center gap-2"
+              className="w-full nerv-button rounded flex items-center justify-center gap-2"
               disabled={!selectedAsset || loading}
             >
               <span>📈</span> View Price Chart
@@ -419,23 +419,23 @@ export default function DCAStrategy() {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-bold mac-text">Amount ($)</label>
+            <label className="block text-sm font-bold nerv-text">Amount ($)</label>
             <input
               type="number"
               value={amount}
               onChange={(e) => setAmount(Number(e.target.value))}
               min={1}
-              className="w-full px-3 py-2 bg-white border-2 border-black rounded"
+              className="w-full nerv-input rounded"
               disabled={loading}
             />
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-bold mac-text">Frequency</label>
+            <label className="block text-sm font-bold nerv-text">Frequency</label>
             <select
               value={frequency}
               onChange={(e) => setFrequency(e.target.value as Frequency)}
-              className="w-full px-3 py-2 bg-white border-2 border-black rounded"
+              className="w-full nerv-input rounded"
               disabled={loading}
             >
               <option value="daily">Daily</option>
@@ -449,23 +449,23 @@ export default function DCAStrategy() {
               type="checkbox"
               checked={aiEnhanced}
               onChange={(e) => setAiEnhanced(e.target.checked)}
-              className="w-4 h-4 border-2 border-black rounded"
+              className="w-4 h-4 nerv-input rounded"
               disabled={loading}
             />
-            <label className="text-sm font-bold mac-text">AI Enhanced Strategy</label>
+            <label className="text-sm font-bold nerv-text">AI Enhanced Strategy</label>
           </div>
 
           <button
             onClick={handleAnalyze}
             disabled={loading || !selectedAsset}
             className={cn(
-              "w-full px-4 py-2 text-white font-bold rounded border-2 border-black relative",
-              loading || !selectedAsset ? "bg-gray-500" : "bg-[#666666] hover:bg-[#777777]"
+              "w-full nerv-button rounded relative",
+              loading || !selectedAsset ? "opacity-50 cursor-not-allowed" : ""
             )}
           >
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-5 h-5 border-3 border-t-white border-r-white border-b-white border-l-transparent rounded-full animate-spin"></div>
+                <div className="w-5 h-5 border-3 border-t-[#00ff00] border-r-[#00ff00] border-b-[#00ff00] border-l-transparent rounded-full animate-spin"></div>
               </div>
             )}
             <span className={loading ? "opacity-0" : ""}>
@@ -477,10 +477,10 @@ export default function DCAStrategy() {
 
       {/* AI Analysis Dashboard */}
       {aiEnhanced && (
-        <div className="mac-window p-4 rounded">
+        <div className="nerv-window p-4 rounded">
           <div className="mb-4">
-            <h2 className="text-lg font-bold mac-text">AI Market Analysis</h2>
-            <p className="text-xs text-gray-500">
+            <h2 className="text-lg font-bold nerv-text">AI Market Analysis</h2>
+            <p className="text-xs nerv-text-secondary">
               Last updated: {new Date(aiAnalysis.timestamp).toLocaleString()}
             </p>
           </div>

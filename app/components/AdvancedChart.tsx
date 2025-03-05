@@ -40,13 +40,13 @@ export default function AdvancedChart({ symbol, onClose }: AdvancedChartProps) {
   }, [symbol, timeRange]);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-[800px] max-h-[80vh] overflow-auto mac-window">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+      <div className="nerv-window p-6 w-[800px] max-h-[80vh] overflow-auto">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold mac-text">Advanced Chart: {symbol}</h2>
+          <h2 className="text-xl font-bold nerv-text">Advanced Chart: {symbol}</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded"
+            className="nerv-button p-2 hover:bg-opacity-20"
           >
             ✕
           </button>
@@ -59,10 +59,10 @@ export default function AdvancedChart({ symbol, onClose }: AdvancedChartProps) {
                 key={range}
                 onClick={() => setTimeRange(range)}
                 className={cn(
-                  "px-3 py-1 border-2 border-black rounded",
+                  "nerv-button px-3 py-1 rounded",
                   timeRange === range
-                    ? "bg-black text-white"
-                    : "bg-white hover:bg-gray-100"
+                    ? "bg-[#00ff00] text-black"
+                    : ""
                 )}
               >
                 {range}
@@ -72,24 +72,23 @@ export default function AdvancedChart({ symbol, onClose }: AdvancedChartProps) {
 
           {loading ? (
             <div className="h-[400px] flex items-center justify-center">
-              <div className="w-8 h-8 border-4 border-t-black border-r-black border-b-black border-l-transparent rounded-full animate-spin"></div>
+              <div className="w-8 h-8 border-4 border-t-[#00ff00] border-r-[#00ff00] border-b-[#00ff00] border-l-transparent rounded-full animate-spin"></div>
             </div>
           ) : error ? (
-            <div className="h-[400px] flex items-center justify-center text-red-500">
+            <div className="h-[400px] flex items-center justify-center nerv-text-warning">
               {error}
             </div>
           ) : chartData.length === 0 ? (
-            <div className="h-[400px] flex items-center justify-center text-gray-500">
+            <div className="h-[400px] flex items-center justify-center nerv-text">
               No data available for this time range
             </div>
           ) : (
-            <div className="h-[400px] border-2 border-black rounded p-4">
-              {/* 这里可以添加更详细的图表实现 */}
+            <div className="h-[400px] nerv-window p-4">
               <div className="space-y-2">
                 {chartData.map((point, index) => (
                   <div key={index} className="flex justify-between text-sm">
-                    <span>{point.date}</span>
-                    <span>${point.price.toFixed(2)}</span>
+                    <span className="nerv-text">{point.date}</span>
+                    <span className="nerv-text-secondary">${point.price.toFixed(2)}</span>
                   </div>
                 ))}
               </div>

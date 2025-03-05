@@ -11,6 +11,12 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+  --nerv-bg: #1a1a1a;
+  --nerv-text-primary: #00ff00;
+  --nerv-text-secondary: #ff6600;
+  --nerv-text-warning: #ff0000;
+  --nerv-border: #33ff33;
+  --nerv-grid: rgba(51, 255, 51, 0.1);
 }
 
 body {
@@ -45,7 +51,83 @@ body {
   background-color: var(--mac-bg-secondary);
 }
 
+/* NERV Theme */
+@font-face {
+  font-family: 'OCR-A';
+  src: url('/fonts/OCR-a.ttf') format('truetype');
+}
 
+/* NERV Window Styles */
+.nerv-window {
+  background-color: var(--nerv-bg);
+  border: 2px solid var(--nerv-border);
+  box-shadow: 0 0 10px var(--nerv-border);
+  font-family: 'OCR-A', monospace;
+  position: relative;
+  overflow: hidden;
+}
+
+.nerv-window::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(90deg, var(--nerv-grid) 1px, transparent 1px) 0 0 / 20px 20px,
+    linear-gradient(0deg, var(--nerv-grid) 1px, transparent 1px) 0 0 / 20px 20px;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.nerv-text {
+  color: var(--nerv-text-primary);
+  font-family: 'OCR-A', monospace;
+  text-shadow: 0 0 5px var(--nerv-text-primary);
+}
+
+.nerv-text-secondary {
+  color: var(--nerv-text-secondary);
+  text-shadow: 0 0 5px var(--nerv-text-secondary);
+}
+
+.nerv-text-warning {
+  color: var(--nerv-text-warning);
+  text-shadow: 0 0 5px var(--nerv-text-warning);
+}
+
+.nerv-button {
+  background-color: var(--nerv-bg);
+  border: 1px solid var(--nerv-text-primary);
+  color: var(--nerv-text-primary);
+  font-family: 'OCR-A', monospace;
+  padding: 0.5rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.nerv-button:hover {
+  background-color: var(--nerv-text-primary);
+  color: var(--nerv-bg);
+  box-shadow: 0 0 10px var(--nerv-text-primary);
+}
+
+.nerv-input {
+  background-color: var(--nerv-bg);
+  border: 1px solid var(--nerv-text-primary);
+  color: var(--nerv-text-primary);
+  font-family: 'OCR-A', monospace;
+  padding: 0.5rem;
+}
+
+.nerv-input:focus {
+  box-shadow: 0 0 10px var(--nerv-text-primary);
+  outline: none;
+}
+
+.nerv-border {
+  border-color: var(--nerv-text-primary);
+}
 
 @layer base {
   :root {
@@ -102,8 +184,6 @@ body {
     --chart-5: 340 75% 55%;
   }
 }
-
-
 
 @layer base {
   * {
